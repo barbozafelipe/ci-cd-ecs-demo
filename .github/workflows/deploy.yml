@@ -40,7 +40,7 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: ci-cd-ecs-task.json
-          container-name: ${{ secrets.SERVICE_NAME }}
+          container-name: ${{ secrets.CONTAINER_NAME }}
           image: ${{ steps.build-image.outputs.image }}
           service: ${{ secrets.SERVICE_NAME }}
           cluster: ci-cd-ecs-cluster
