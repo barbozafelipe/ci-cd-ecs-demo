@@ -1,4 +1,4 @@
-name: Deploy to Amazon ECR 🚀
+name: Deploy to Amazon ECS 🚀
 
 on:
   push:
@@ -11,25 +11,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v2
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-    - name: Build, tag, and push image
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        IMAGE_TAG: latest
-        SERVICE_NAME: ${{ secrets.SERVICE_NAME }}
-      run: |
-        docker build -t $ECR_REGISTRY/$SERVICE_NAME:$IMAGE_TAG .
-        docker push $ECR_REGISTRY/$SERVICE_NAME:$IMAGE_TAG
+      - name: Build, tag and push image
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+          SERVICE_NAME: ${{ secrets.SERVICE_NAME }}
+        run: |
+          docker build -t $ECR_REGISTRY/$SERVICE_NAME:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$SERVICE_NAME:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$SERVICE_NAME:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Deploy to Amazon ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ci-cd-ecs-task.json
+          container-name: ${{ secrets.SERVICE_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
+          service: ${{ secrets.SERVICE_NAME }}
+          cluster: ci-cd-ecs-cluster
+          wait-for-service-stability: true
