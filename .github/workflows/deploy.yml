@@ -30,7 +30,7 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
-          SERVICE_NAME: ${{ secrets.SERVICE_NAME }}
+          SERVICE_NAME: ci-cd-ecs-demo
         run: |
           docker build -t $ECR_REGISTRY/$SERVICE_NAME:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$SERVICE_NAME:$IMAGE_TAG
@@ -40,8 +40,8 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: ci-cd-ecs-task.json
-          container-name: ${{ secrets.CONTAINER_NAME }}
+          container-name: ci-cd-ecs-container
           image: ${{ steps.build-image.outputs.image }}
-          service: ${{ secrets.SERVICE_NAME }}
+          service: ci-cd-ecs-task-service-znef4wzk
           cluster: ci-cd-ecs-cluster
           wait-for-service-stability: true
