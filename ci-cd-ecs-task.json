@@ -1,0 +1,32 @@
+{
+  "family": "ci-cd-ecs-task",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "1024",
+  "memory": "2048",
+  "executionRoleArn": "arn:aws:iam::199455886197:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "ci-cd-ecs-container",
+      "image": "IMAGE_URI_PLACEHOLDER",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "hostPort": 3000,
+          "protocol": "tcp"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/ci-cd-ecs-task",
+          "awslogs-region": "us-east-2",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}
